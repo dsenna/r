@@ -5,7 +5,7 @@ library(dplyr)
 
 #Gerando o Data Frame 
 
-json_data <- read_json(path='C:/Users/David/Desktop/tcc/chat/exemplo/28maio22.json', simplifyVector = TRUE)
+json_data <- read_json(path='C:/Users/David/Desktop/tcc/chat/exemplo/29maio22.json', simplifyVector = TRUE)
 
 #Transformando em Colunas 
 
@@ -87,7 +87,7 @@ mysw <- tibble(word = c("aatrox", "ahri", "akali", "akshan", "alistar",
                         "supsup", "supps", "tyler", "game", "yep", "chat", "play", 
                         "bro", "stream", "stream", "korean", "games", "champ", 
                         "yeah", "skin", "ad", "ap", "map")
-                              , lexicon = "lol")
+               , lexicon = "lol")
 
 unigram <- anti_join(unigram, mysw, 
                      by = "word")
@@ -170,7 +170,7 @@ rule_1 <- bigram_sentiments %>%
   filter(emotion1 == "negation") 
 
 rule_1  <- rule_1[, c('name', 'created_at', 'word1', 'word2', 'emotion2')]
-  
+
 rule_1['emotion'] <- NA
 
 rule_1 <- rule_1 %>%
@@ -188,15 +188,15 @@ rule_1 <- rule_1 %>%
   ))
 
 rule_1_sentiments_count <- rule_1 %>%
-  count(emotion2, emotion, sort=TRUE) %>%
+  count(emotion2, created_at, emotion, sort=TRUE) %>%
   arrange(name)
 
 rule_2 <- bigram_sentiments %>% 
   filter((type1 == "text") & 
-        (emotion1 == "positive" | emotion1 == "trust" | 
-        emotion1 == "anticipation" | emotion1 == "joy" | emotion1 == "surprise") & 
-        (type2 == "emote") &
-        (emotion2 == "posneg" | emotion2 == "negative"))
+           (emotion1 == "positive" | emotion1 == "trust" | 
+              emotion1 == "anticipation" | emotion1 == "joy" | emotion1 == "surprise") & 
+           (type2 == "emote") &
+           (emotion2 == "posneg" | emotion2 == "negative"))
 
 rule_2  <- rule_2[, c('name', 'created_at', 'word1', 'word2', 'emotion1', 'emotion2')]
 
@@ -205,7 +205,7 @@ rule_2['emotion'] <- "irony"
 rule_2_1 <- distinct(rule_2, created_at, .keep_all = TRUE)
 
 rule_2_sentiments_count <- rule_2_1 %>%
-  count(name,emotion, sort=TRUE) %>%
+  count(name, created_at, emotion, sort=TRUE) %>%
   arrange(name)
 
 rule_3 <- bigram_sentiments %>% 
@@ -223,7 +223,7 @@ rule_3['emotion'] <- "humor"
 rule_3_1 <- distinct(rule_3, created_at, .keep_all = TRUE)
 
 rule_3_sentiments_count <- rule_3_1 %>%
-  count(name,emotion, sort=TRUE) %>%
+  count(name, created_at, emotion, sort=TRUE) %>%
   arrange(name)
 
 rule_4 <- bigram_sentiments %>% 
@@ -240,7 +240,7 @@ rule_4['emotion'] <- "positive"
 rule_4_1 <- distinct(rule_4, created_at, .keep_all = TRUE)
 
 rule_4_sentiments_count <- rule_4_1 %>%
-  count(name,emotion, sort=TRUE) %>%
+  count(name, created_at, emotion, sort=TRUE) %>%
   arrange(name)
 
 rule_5 <- bigram_sentiments %>% 
@@ -258,7 +258,7 @@ rule_5['emotion'] <- "negative"
 rule_5_1 <- distinct(rule_5, created_at, .keep_all = TRUE)
 
 rule_5_sentiments_count <- rule_5_1 %>%
-  count(name,emotion, sort=TRUE) %>%
+  count(name, created_at, emotion, sort=TRUE) %>%
   arrange(name)
 
 rule_6 <- bigram_sentiments %>% 
@@ -274,13 +274,18 @@ rule_6['emotion'] <- "irony"
 rule_6_1 <- distinct(rule_6, created_at, .keep_all = TRUE)
 
 rule_6_sentiments_count <- rule_6_1 %>%
-  count(name,emotion, sort=TRUE) %>%
+  count(name, created_at, created_at, emotion, sort=TRUE) %>%
   arrange(name)
 
 unigram_sentiments_all <- left_join(unigram, unigram_sentiments)
 
+unigram_sentiments_all_na <- unigram_sentiments_all %>%
+  filter(is.na(emotion))
+
+unigram_sentiments_all <- union_all(unigram_sentiments, unigram_sentiments_all_na)
+
 unigram_sentiments_all_count <- unigram_sentiments_all %>%
-  count(name,word,emotion, sort=TRUE) %>%
+  count(name, created_at, word,emotion, sort=TRUE) %>%
   arrange(name)
 
 unigram_sentiments_all_count %>%
@@ -297,7 +302,7 @@ unigram_sentiments_count_na %>% summarise(sum(unigram_sentiments_count_na$n))
 unigram_sentiments$rownumber = 1:dim(unigram_sentiments)[1]
 unigram_sentiments = dplyr::mutate(unigram_sentiments, emotecount=0)
 unigram_sentiments_filter <- unigram_sentiments #%>%
-  #filter(emotion == "positive" | emotion == "negative" | emotion == "posneg")
+#filter(emotion == "positive" | emotion == "negative" | emotion == "posneg")
 
 count <- 0
 for(i in 1:nrow(unigram_sentiments_filter)) {
@@ -317,30 +322,32 @@ unigram_sentiments_filter <- unigram_sentiments_filter %>%
 i <- nrow(unigram_sentiments_filter)
 #print(i)
 while(i >= 1)
-  {
+{
   #print(i)
   if(unigram_sentiments_filter[i,8] >= 50)
-    {
+  {
     j <- unigram_sentiments_filter[i,8]
     while(j >= 1)
-      {
+    {
       unigram_sentiments_filter[i,9] <- 1
       j <- j-1
       i <- i-1
-      }
-    i <- i+1
     }
-    i <- i-1
+    i <- i+1
+  }
+  i <- i-1
 }
 
+unigram_sentiments_filter <- unigram_sentiments_filter %>% 
+  filter( is.na(...9))
+
 unigram_sentiments_filter_count <- unigram_sentiments_filter %>%
-  count(name,created_at,emotion, sort=TRUE) %>%
+  count(name, created_at,emotion, sort=TRUE) %>%
   arrange(name)
 
-aldenioburner
 rule_1_sentiments_count_all <- left_join(unigram_sentiments_filter_count, rule_1_sentiments_count, 
-                              by = c("name", "emotion" = "emotion2")) %>%
-                    arrange(name)
+                                         by = c("name", "created_at", "emotion" = "emotion2")) %>%
+  arrange(name)
 
 #rule_1_sentiments_count_all['n'] <- NA
 rule_1_sentiments_count_all <- mutate(rule_1_sentiments_count_all, n = n.x)
@@ -348,23 +355,23 @@ rule_1_sentiments_count_all <- mutate(rule_1_sentiments_count_all, n = ifelse(! 
 rule_1_sentiments_count_all <- rule_1_sentiments_count_all[, c('name', "created_at", 'emotion', 'n')]
 
 rule_1_1_count <- rule_1 %>%
-  count(emotion, sort=TRUE) %>%
+  count(emotion, created_at, sort=TRUE) %>%
   arrange(name)
 
 rule_1_sentiments_count_all <- union_all(rule_1_sentiments_count_all, rule_1_1_count)
 
 rule_1_sentiments_count_all <- aggregate(rule_1_sentiments_count_all$n, 
-                      list(rule_1_sentiments_count_all$name,rule_1_sentiments_count_all$created_at,rule_1_sentiments_count_all$emotion),FUN=sum) %>%
-                      rename(name = Group.1, created_at = Group.2, emotion = Group.3, n = x) %>%
-                      arrange(name)
+                                         list(rule_1_sentiments_count_all$name,rule_1_sentiments_count_all$created_at,rule_1_sentiments_count_all$emotion),FUN=sum) %>%
+  rename(name = Group.1, created_at = Group.2, emotion = Group.3, n = x) %>%
+  arrange(name)
 
 rule_2_sentiments_count_all <- rule_2 %>%
-  count(emotion1, sort=TRUE) %>%
+  count(emotion1, created_at, sort=TRUE) %>%
   arrange(name)
 
 rule_2_sentiments_count_all <- left_join(rule_1_sentiments_count_all, rule_2_sentiments_count_all, 
-                                            by = c("name", "emotion" = "emotion1")) %>%
-                                  arrange(name)
+                                         by = c("name", "created_at", "emotion" = "emotion1")) %>%
+  arrange(name)
 
 rule_2_sentiments_count_all <- mutate(rule_2_sentiments_count_all, n = n.x)
 rule_2_sentiments_count_all <- mutate(rule_2_sentiments_count_all, n = ifelse(! is.na(n.y), n - n.y, n))
@@ -372,11 +379,11 @@ rule_2_sentiments_count_all <- rule_2_sentiments_count_all[, c('name', "created_
 
 #rule_2_1 <- rule_2 %>% filter(emotion1 == "positive")
 rule_2_1_count <- rule_2_1 %>%
-  count(emotion2, sort=TRUE) %>%
+  count(emotion2,created_at, sort=TRUE) %>%
   arrange(name)
 
 rule_2_sentiments_count_all <- left_join(rule_2_sentiments_count_all, rule_2_1_count, 
-                                         by = c("name", "emotion" = "emotion2")) %>%
+                                         by = c("name", "created_at", "emotion" = "emotion2")) %>%
   arrange(name)
 
 rule_2_sentiments_count_all <- mutate(rule_2_sentiments_count_all, n = n.x)
@@ -386,11 +393,11 @@ rule_2_sentiments_count_all <- rule_2_sentiments_count_all[, c('name', "created_
 rule_2_sentiments_count_all <- union_all(rule_2_sentiments_count_all, rule_2_sentiments_count)
 
 rule_3_sentiments_count_all <- rule_3 %>%
-  count(emotion1, sort=TRUE) %>%
+  count(emotion1, created_at, sort=TRUE) %>%
   arrange(name)
 
 rule_3_sentiments_count_all <- left_join(rule_2_sentiments_count_all, rule_3_sentiments_count_all, 
-                                         by = c("name", "emotion" = "emotion1")) %>%
+                                         by = c("name", "created_at", "emotion" = "emotion1")) %>%
   arrange(name)
 
 rule_3_sentiments_count_all <- mutate(rule_3_sentiments_count_all, n = n.x)
@@ -400,11 +407,11 @@ rule_3_sentiments_count_all <- rule_3_sentiments_count_all[, c('name', "created_
 #filtrar emotion1 antes de fazer o tratamento com a emotion2 df rule3
 #rule_3_1 <- distinct(rule_3, created_at, .keep_all = TRUE)
 rule_3_1_count <- rule_3_1 %>%
-  count(emotion2, sort=TRUE) %>%
+  count(emotion2, created_at, sort=TRUE) %>%
   arrange(name)
 
 rule_3_sentiments_count_all <- left_join(rule_3_sentiments_count_all, rule_3_1_count, 
-                                         by = c("name", "emotion" = "emotion2")) %>%
+                                         by = c("name", "created_at", "emotion" = "emotion2")) %>%
   arrange(name)
 
 rule_3_sentiments_count_all <- mutate(rule_3_sentiments_count_all, n = n.x)
@@ -413,24 +420,24 @@ rule_3_sentiments_count_all <- rule_3_sentiments_count_all[, c('name', "created_
 
 rule_3_sentiments_count_all <- union_all(rule_3_sentiments_count_all, rule_3_sentiments_count)
 
-rule_4_sentiments_count_all <- rule_4_1 %>%
-  count(emotion1, sort=TRUE) %>%
-  arrange(name)
+#rule_4_sentiments_count_all <- rule_4_1 %>%
+#  count(emotion1, created_at,sort=TRUE) %>%
+#  arrange(name)
 
 rule_4_sentiments_count_all <- left_join(rule_3_sentiments_count_all, rule_4_sentiments_count, 
-                                         by = c("name", "emotion")) %>%
+                                         by = c("name", "created_at", "emotion")) %>%
   arrange(name)
 
 rule_4_sentiments_count_all <- mutate(rule_4_sentiments_count_all, n = n.x)
 rule_4_sentiments_count_all <- mutate(rule_4_sentiments_count_all, n = ifelse(! is.na(n.y), n + n.y, n))
 rule_4_sentiments_count_all <- rule_4_sentiments_count_all[, c('name', "created_at", 'emotion', 'n')]
 
-rule_5_sentiments_count_all <- rule_5_1 %>%
-  count(emotion1, sort=TRUE) %>%
-  arrange(name)
+#rule_5_sentiments_count_all <- rule_5_1 %>%
+#  count(created_at, emotion1, sort=TRUE) %>%
+#  arrange(name)
 
 rule_5_sentiments_count_all <- left_join(rule_4_sentiments_count_all, rule_5_sentiments_count, 
-                                         by = c("name", "emotion")) %>%
+                                         by = c("name", "created_at", "emotion")) %>%
   arrange(name)
 
 rule_5_sentiments_count_all <- mutate(rule_5_sentiments_count_all, n = n.x)
@@ -438,11 +445,11 @@ rule_5_sentiments_count_all <- mutate(rule_5_sentiments_count_all, n = ifelse(! 
 rule_5_sentiments_count_all <- rule_5_sentiments_count_all[, c('name', "created_at", 'emotion', 'n')]
 
 rule_6_sentiments_count_all <- rule_6 %>%
-  count(emotion1, sort=TRUE) %>%
+  count(created_at, emotion1, sort=TRUE) %>%
   arrange(name)
 
 rule_6_sentiments_count_all <- left_join(rule_5_sentiments_count_all, rule_6_sentiments_count_all, 
-                                         by = c("name", "emotion" = "emotion1")) %>%
+                                         by = c("name", "created_at", "emotion" = "emotion1")) %>%
   arrange(name)
 
 rule_6_sentiments_count_all <- mutate(rule_6_sentiments_count_all, n = n.x)
@@ -450,64 +457,70 @@ rule_6_sentiments_count_all <- mutate(rule_6_sentiments_count_all, n = ifelse(! 
 rule_6_sentiments_count_all <- rule_6_sentiments_count_all[, c('name', "created_at", 'emotion', 'n')]
 
 rule_6_1_count <- rule_6_1 %>%
-  count(emotion2, sort=TRUE) %>%
+  count(created_at, emotion2, sort=TRUE) %>%
   arrange(name)
 
 rule_6_sentiments_count_all <- left_join(rule_6_sentiments_count_all, rule_6_1_count, 
-                                         by = c("name", "emotion" = "emotion2")) %>%
+                                         by = c("name", "created_at", "emotion" = "emotion2")) %>%
   arrange(name)
 
 rule_6_sentiments_count_all <- mutate(rule_6_sentiments_count_all, n = n.x)
 rule_6_sentiments_count_all <- mutate(rule_6_sentiments_count_all, n = ifelse(! is.na(n.y), n - n.y, n))
 rule_6_sentiments_count_all <- rule_6_sentiments_count_all[, c('name', "created_at", 'emotion', 'n')]
 
-rule_6_sentiments_count_all <- union_all(rule_6_sentiments_count_all, rule_6_sentiments_count)
+#charmainediyoza
+rule_6_1_count_2 <- rule_6_1 %>%
+  count(created_at, emotion, sort=TRUE) %>%
+  arrange(name)
+
+rule_6_sentiments_count_all <- union_all(rule_6_sentiments_count_all, rule_6_1_count_2)
 
 unigram_rules <- rule_6_sentiments_count_all
 
-write.table(unigram_rules, "C:/Users/David/Desktop/2805/unigram_rules_28maio22.csv")
-write.table(bigram, "C:/Users/David/Desktop/2805/bigram.csv")
-write.table(bigram_sentiments, "C:/Users/David/Desktop/2805/bigram_sentiments.csv")
-write.table(json_data, "C:/Users/David/Desktop/2805/json_data.csv")
-write.table(mysw, "C:/Users/David/Desktop/2805/mysw.csv")
-write.table(nrc_te, "C:/Users/David/Desktop/2805/nrc_te.csv")
-write.table(rule_1, "C:/Users/David/Desktop/2805/rule_1.csv")
-write.table(rule_1_1_count, "C:/Users/David/Desktop/2805/rule_1_1_count.csv")
-write.table(rule_1_sentiments_count, "C:/Users/David/Desktop/2805/rule_1_sentiments_count.csv")
-write.table(rule_1_sentiments_count_all, "C:/Users/David/Desktop/2805/rule_1_sentiments_count_all.csv")
-write.table(rule_2, "C:/Users/David/Desktop/2805/rule_2.csv")
-write.table(rule_2_1, "C:/Users/David/Desktop/2805/rule_2_1.csv")
-write.table(rule_2_1_count, "C:/Users/David/Desktop/2805/rule_2_1_count.csv")
-write.table(rule_2_sentiments_count, "C:/Users/David/Desktop/2805/rule_2_sentiments_count.csv")
-write.table(rule_2_sentiments_count_all, "C:/Users/David/Desktop/2805/rule_2_sentiments_count_all.csv")
-write.table(rule_3, "C:/Users/David/Desktop/2805/rule_3.csv")
-write.table(rule_3_1, "C:/Users/David/Desktop/2805/rule_3_1.csv")
-write.table(rule_3_1_count, "C:/Users/David/Desktop/2805/rule_3_1_count.csv")
-write.table(rule_3_sentiments_count, "C:/Users/David/Desktop/2805/rule_3_sentiments_count.csv")
-write.table(rule_3_sentiments_count_all, "C:/Users/David/Desktop/2805/rule_3_sentiments_count_all.csv")
-write.table(rule_4, "C:/Users/David/Desktop/2805/rule_4.csv")
-write.table(rule_4_1, "C:/Users/David/Desktop/2805/rule_4_1.csv")
-write.table(rule_2_sentiments_count, "C:/Users/David/Desktop/2805/rule_2_sentiments_count.csv")
-write.table(rule_2_sentiments_count_all, "C:/Users/David/Desktop/2805/rule_2_sentiments_count_all.csv")
-write.table(rule_5, "C:/Users/David/Desktop/2805/rule_5.csv")
-write.table(rule_5_1, "C:/Users/David/Desktop/2805/rule_5_1.csv")
-write.table(rule_5_sentiments_count, "C:/Users/David/Desktop/2805/rule_5_sentiments_count.csv")
-write.table(rule_5_sentiments_count_all, "C:/Users/David/Desktop/2805/rule_5_sentiments_count_all.csv")
-write.table(rule_6, "C:/Users/David/Desktop/2805/rule_6.csv")
-write.table(rule_6_1, "C:/Users/David/Desktop/2805/rule_6_1.csv")
-write.table(rule_6_1_count, "C:/Users/David/Desktop/2805/rule_6_1_count.csv")
-write.table(rule_6_sentiments_count, "C:/Users/David/Desktop/2805/rule_6_sentiments_count.csv")
-write.table(rule_6_sentiments_count_all, "C:/Users/David/Desktop/2805/rule_6_sentiments_count_all.csv")
-write.table(sw, "C:/Users/David/Desktop/2805/sw.csv")
-write.table(unigram, "C:/Users/David/Desktop/2805/unigram.csv")
-write.table(unigram_sentiments, "C:/Users/David/Desktop/2805/unigram_sentiments.csv")
-write.table(unigram_sentiments_all, "C:/Users/David/Desktop/2805/unigram_sentiments_all.csv")
-write.table(unigram_sentiments_all_count, "C:/Users/David/Desktop/2805/unigram_sentiments_all_count.csv")
-write.table(unigram_sentiments_all_count_na, "C:/Users/David/Desktop/2805/unigram_sentiments_all_count_na.csv")
-write.table(unigram_sentiments_count, "C:/Users/David/Desktop/2805/unigram_sentiments_count.csv")
-write.table(unigram_sentiments_count_na, "C:/Users/David/Desktop/2805/unigram_sentiments_count_na.csv")
-write.table(unigram_sentiments_filter, "C:/Users/David/Desktop/2805/unigram_sentiments_filter.csv")
-write.table(unigram_sentiments_filter_count, "C:/Users/David/Desktop/2805/unigram_sentiments_filter_count.csv")
+write.table(unigram_rules, "C:/Users/David/Desktop/2905/unigram_rules_29maio22.csv")
+write.table(bigram, "C:/Users/David/Desktop/2905/bigram.csv")
+write.table(bigram_sentiments, "C:/Users/David/Desktop/2905/bigram_sentiments.csv")
+write.table(json_data, "C:/Users/David/Desktop/2905/json_data.csv")
+write.table(mysw, "C:/Users/David/Desktop/2905/mysw.csv")
+write.table(nrc_te, "C:/Users/David/Desktop/2905/nrc_te.csv")
+write.table(rule_1, "C:/Users/David/Desktop/2905/rule_1.csv")
+write.table(rule_1_1_count, "C:/Users/David/Desktop/2905/rule_1_1_count.csv")
+write.table(rule_1_sentiments_count, "C:/Users/David/Desktop/2905/rule_1_sentiments_count.csv")
+write.table(rule_1_sentiments_count_all, "C:/Users/David/Desktop/2905/rule_1_sentiments_count_all.csv")
+write.table(rule_2, "C:/Users/David/Desktop/2905/rule_2.csv")
+write.table(rule_2_1, "C:/Users/David/Desktop/2905/rule_2_1.csv")
+write.table(rule_2_1_count, "C:/Users/David/Desktop/2905/rule_2_1_count.csv")
+write.table(rule_2_sentiments_count, "C:/Users/David/Desktop/2905/rule_2_sentiments_count.csv")
+write.table(rule_2_sentiments_count_all, "C:/Users/David/Desktop/2905/rule_2_sentiments_count_all.csv")
+write.table(rule_3, "C:/Users/David/Desktop/2905/rule_3.csv")
+write.table(rule_3_1, "C:/Users/David/Desktop/2905/rule_3_1.csv")
+write.table(rule_3_1_count, "C:/Users/David/Desktop/2905/rule_3_1_count.csv")
+write.table(rule_3_sentiments_count, "C:/Users/David/Desktop/2905/rule_3_sentiments_count.csv")
+write.table(rule_3_sentiments_count_all, "C:/Users/David/Desktop/2905/rule_3_sentiments_count_all.csv")
+write.table(rule_4, "C:/Users/David/Desktop/2905/rule_4.csv")
+write.table(rule_4_1, "C:/Users/David/Desktop/2905/rule_4_1.csv")
+write.table(rule_2_sentiments_count, "C:/Users/David/Desktop/2905/rule_2_sentiments_count.csv")
+write.table(rule_2_sentiments_count_all, "C:/Users/David/Desktop/2905/rule_2_sentiments_count_all.csv")
+write.table(rule_5, "C:/Users/David/Desktop/2905/rule_5.csv")
+write.table(rule_5_1, "C:/Users/David/Desktop/2905/rule_5_1.csv")
+write.table(rule_5_sentiments_count, "C:/Users/David/Desktop/2905/rule_5_sentiments_count.csv")
+write.table(rule_5_sentiments_count_all, "C:/Users/David/Desktop/2905/rule_5_sentiments_count_all.csv")
+write.table(rule_6, "C:/Users/David/Desktop/2905/rule_6.csv")
+write.table(rule_6_1, "C:/Users/David/Desktop/2905/rule_6_1.csv")
+write.table(rule_6_1_count, "C:/Users/David/Desktop/2905/rule_6_1_count.csv")
+write.table(rule_6_1_count_2, "C:/Users/David/Desktop/2905/rule_6_1_count_2.csv")
+write.table(rule_6_sentiments_count, "C:/Users/David/Desktop/2905/rule_6_sentiments_count.csv")
+write.table(rule_6_sentiments_count_all, "C:/Users/David/Desktop/2905/rule_6_sentiments_count_all.csv")
+write.table(sw, "C:/Users/David/Desktop/2905/sw.csv")
+write.table(unigram, "C:/Users/David/Desktop/2905/unigram.csv")
+write.table(unigram_sentiments, "C:/Users/David/Desktop/2905/unigram_sentiments.csv")
+write.table(unigram_sentiments_all, "C:/Users/David/Desktop/2905/unigram_sentiments_all.csv")
+write.table(unigram_sentiments_all_count, "C:/Users/David/Desktop/2905/unigram_sentiments_all_count.csv")
+write.table(unigram_sentiments_all_count_na, "C:/Users/David/Desktop/2905/unigram_sentiments_all_count_na.csv")
+write.table(unigram_sentiments_count, "C:/Users/David/Desktop/2905/unigram_sentiments_count.csv")
+write.table(unigram_sentiments_count_na, "C:/Users/David/Desktop/2905/unigram_sentiments_count_na.csv")
+write.table(unigram_sentiments_filter, "C:/Users/David/Desktop/2905/unigram_sentiments_filter.csv")
+write.table(unigram_sentiments_filter_count, "C:/Users/David/Desktop/2905/unigram_sentiments_filter_count.csv")
 
 
 library(ggplot2)
@@ -527,18 +540,3 @@ ggplot(rule_6_sentiments_count_all, aes(emotion, n, color="red")) +
   geom_col(show.legend = FALSE)
 ggplot(unigram_rules, aes(emotion, n, color="red")) +
   geom_col(show.legend = FALSE)
-
-
-library(tidyr)
-  frequency <- unigram_sentiments_all_count_na %>%
-  mutate(proportion = n / sum(n)) %>% 
-    select(-n) 
-  
-library(scales)
-library(ggplot2)
-# expect a warning about rows with missing values being removed
-ggplot(frequency, aes(proportion, name)) +
-      geom_jitter()
-
-write.table(frequency, "C:/Users/David/Desktop/frequency.csv")
-
